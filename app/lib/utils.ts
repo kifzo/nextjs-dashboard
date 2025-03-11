@@ -1,11 +1,23 @@
 import { Revenue } from './definitions';
 
-export const formatCurrency = (amount: number) => {
-  return (amount / 100).toLocaleString('en-US', {
+// export const formatCurrency = (amount: number) => {
+//   return (amount / 100).toLocaleString('en-US', {
+//     style: 'currency',
+//     currency: 'USD',
+//   });
+// };
+
+export const formatCurrency = (amount: number | string): string => {
+  const numberAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+
+  return new Intl.NumberFormat('ja-JP', {
     style: 'currency',
-    currency: 'USD',
-  });
+    currency: 'JPY',
+    minimumFractionDigits: 0,
+  }).format(numberAmount);
 };
+
+
 
 export const formatDateToLocal = (
   dateStr: string,
