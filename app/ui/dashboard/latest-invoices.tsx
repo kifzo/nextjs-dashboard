@@ -43,6 +43,9 @@ export default async function LatestInvoices({
                     <p className="hidden text-sm text-gray-500 sm:block">
                       {invoice.email}
                     </p>
+                    <p className="hidden text-sm text-gray-500 sm:block">
+                      {new Date(invoice.date).toLocaleDateString("ja-JP")}
+                    </p>
                   </div>
                 </div>
                 <p
