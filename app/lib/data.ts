@@ -7,7 +7,7 @@ import {
   LatestInvoiceRaw,
   Revenue,
 } from './definitions';
-import { formatCurrency } from './utils';
+import { formatCurrency } from './utils'; // app.lib.utils.ts で定義された関数
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 

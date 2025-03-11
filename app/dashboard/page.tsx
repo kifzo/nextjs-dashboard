@@ -10,14 +10,31 @@ import {
 import { log } from "console";
 
 export default async function Page() {
-  const revenue = await fetchRevenue();
-  const latestInvoices = await fetchLatestInvoices();
+  // 3つのデータ取得関数が逐次的に実行されており、ウォーターフォールパターン
+  // const revenue = await fetchRevenue();
+  // const latestInvoices = await fetchLatestInvoices();
+  // const {
+  //   numberOfInvoices,
+  //   numberOfCustomers,
+  //   totalPaidInvoices,
+  //   totalPendingInvoices,
+  // } = await fetchCardData();
+
+  // Promise.all()を使って並列に実行する方法
+  // 各リクエストが互いに依存関係がない場合に最適な方法です。
+  // パフォーマンス向上: 3つのリクエストが並列に実行され、全体の読み込み時間が短縮されます
+  const [revenue, latestInvoices, cardData] = await Promise.all([
+    fetchRevenue(),
+    fetchLatestInvoices(),
+    fetchCardData(),
+  ]);
+  // cardDataから必要なデータを取り出す
   const {
     numberOfInvoices,
     numberOfCustomers,
     totalPaidInvoices,
     totalPendingInvoices,
-  } = await fetchCardData();
+  } = cardData;
 
   return (
     <main>
