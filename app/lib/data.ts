@@ -15,14 +15,14 @@ export async function fetchRevenue() {
   try {
     // デモ目的のために意図的にレスポンスを遅延させています。
     // 本番環境ではこのようなことはしないでください :)
-    // console.log('Fetching revenue data...');
-    // await new Promise((resolve) => setTimeout(resolve, 3000));
+    console.log('Fetching revenue data...');
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const data = await sql<Revenue[]>`SELECT * FROM revenue`;
 
     // デモ目的のために意図的にレスポンスを遅延させています。
     // 本番環境ではこのようなことはしないでください :)
-    // console.log('Data fetch completed after 3 seconds.');
+    console.log('Data fetch completed after 3 seconds.');
 
     return data;
   } catch (error) {
