@@ -88,29 +88,65 @@ export async function fetchLatestInvoices() {
     throw new Error('Failed to fetch the latest invoices.');
   }
 }
+//     // 並列クエリアプローチの使用ケース:
+//     // 各クエリの実行に非常に時間がかかる場合
+//     // クエリ同士が完全に独立していて、それぞれ大量のデータを処理する場合
+//     // 異なるデータソースからデータを取得する場合
+//     // これらのクエリは1つのSQLクエリにまとめることができますが、
+//     // JavaScriptで複数のクエリを並列に実行する方法を示すために、
+//     // 意図的に分けています。
+// export async function fetchCardData() {
+//   try {
+//     const invoiceCountPromise = sql`SELECT COUNT(*) FROM invoices`;
+//     const customerCountPromise = sql`SELECT COUNT(*) FROM customers`;
+//     const invoiceStatusPromise = sql`SELECT
+//          SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS "paid",
+//          SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending"
+//          FROM invoices`;
 
+//     const data = await Promise.all([
+//       invoiceCountPromise,
+//       customerCountPromise,
+//       invoiceStatusPromise,
+//     ]);
+
+//     const numberOfInvoices = Number(data[0][0].count ?? '0');
+//     const numberOfCustomers = Number(data[1][0].count ?? '0');
+//     const totalPaidInvoices = formatCurrency(data[2][0].paid ?? '0');
+//     const totalPendingInvoices = formatCurrency(data[2][0].pending ?? '0');
+
+//     return {
+//       numberOfCustomers,
+//       numberOfInvoices,
+//       totalPaidInvoices,
+//       totalPendingInvoices,
+//     };
+//   } catch (error) {
+//     console.error('Database Error:', error);
+//     throw new Error('Failed to fetch card data.');
+//   }
+// }
+
+// 一般的には、下記の単一クエリアプローチがベストプラクティスとして推奨されます。
+// 単一クエリアプローチのメリット:
+// ネットワークオーバーヘッドの削減: データベース接続は1回のみ
+// データベース負荷の軽減: 1回のクエリ実行でデータベースエンジンが最適化できる
+// コードの単純化: 処理ロジックがシンプル
+// トランザクション整合性: 全てのデータが同じ時点で取得される
 export async function fetchCardData() {
   try {
-    // You can probably combine these into a single SQL query
-    // However, we are intentionally splitting them to demonstrate
-    // how to initialize multiple queries in parallel with JS.
-    const invoiceCountPromise = sql`SELECT COUNT(*) FROM invoices`;
-    const customerCountPromise = sql`SELECT COUNT(*) FROM customers`;
-    const invoiceStatusPromise = sql`SELECT
-         SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS "paid",
-         SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending"
-         FROM invoices`;
+    const data = await sql`
+      SELECT
+        (SELECT COUNT(*) FROM invoices) as invoice_count,
+        (SELECT COUNT(*) FROM customers) as customer_count,
+        SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS paid_total,
+        SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS pending_total
+      FROM invoices`;
 
-    const data = await Promise.all([
-      invoiceCountPromise,
-      customerCountPromise,
-      invoiceStatusPromise,
-    ]);
-
-    const numberOfInvoices = Number(data[0][0].count ?? '0');
-    const numberOfCustomers = Number(data[1][0].count ?? '0');
-    const totalPaidInvoices = formatCurrency(data[2][0].paid ?? '0');
-    const totalPendingInvoices = formatCurrency(data[2][0].pending ?? '0');
+    const numberOfInvoices = Number(data[0].invoice_count ?? '0');
+    const numberOfCustomers = Number(data[0].customer_count ?? '0');
+    const totalPaidInvoices = formatCurrency(data[0].paid_total ?? '0');
+    const totalPendingInvoices = formatCurrency(data[0].pending_total ?? '0');
 
     return {
       numberOfCustomers,
