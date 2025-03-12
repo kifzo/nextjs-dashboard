@@ -7,10 +7,10 @@ import {
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import clsx from "clsx";
+import clsx from "clsx"; // 条件付きでCSSクラス名を構築するためのシンプルなユーティリティ。
 
-// Map of links to display in the side navigation.
-// Depending on the size of the application, this would be stored in a database.
+// サイドナビゲーションに表示するリンクのマップ。
+// アプリケーションの規模によっては、これはデータベースに保存される可能性があります。
 const links = [
   { name: "Home", href: "/dashboard", icon: HomeIcon },
   {
@@ -33,8 +33,10 @@ export default function NavLinks() {
             href={link.href}
             // className="flex h-[48px] grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-sky-100 hover:text-blue-600 md:flex-none md:justify-start md:p-2 md:px-3"
             className={clsx(
+              // 通常時のクラス
               "flex h-[48px] grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-sky-100 hover:text-blue-600 md:flex-none md:justify-start md:p-2 md:px-3",
               {
+                // 現在のパスとリンクの href が一致する場合に適用されるクラス
                 "bg-sky-100 text-blue-600": pathname === link.href,
               }
             )}

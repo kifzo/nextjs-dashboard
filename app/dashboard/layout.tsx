@@ -10,3 +10,5 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+// Next.js でレイアウトを使用する利点の 1 つは、ナビゲーション時にページ コンポーネントのみが更新され、レイアウトは再レンダリングされないことです。これは部分レンダリングと呼ばれ、ページ間の遷移時にレイアウト内のクライアント側の React 状態が保持されます。
