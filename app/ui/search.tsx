@@ -6,8 +6,8 @@ import { useDebouncedCallback } from "use-debounce";
 
 export default function Search({ placeholder }: { placeholder: string }) {
   const searchParams = useSearchParams(); // フックの使用宣言
-  const pathname = usePathname();
-  const { replace } = useRouter();
+  const pathname = usePathname(); // フックの使用宣言
+  const { replace } = useRouter(); // フックの使用宣言
 
   const handleSearch = useDebouncedCallback((term) => {
     console.log(`Searching... ${term}`);

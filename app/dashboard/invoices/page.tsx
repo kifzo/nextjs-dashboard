@@ -5,16 +5,21 @@ import { CreateInvoice } from "@/app/ui/invoices/buttons";
 import { lusitana } from "@/app/ui/fonts";
 import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 import { Suspense } from "react";
+import { log } from "node:console";
 
+// searchParamsはNext.jsがURLのクエリパラメータを解析して自動的に渡している。特定の親コンポーネントからpropsを受け取っているわけではなく、Next.jsのルーティングシステムによって自動的にクエリパラメータが渡されている
 export default async function Page(props: {
   searchParams?: Promise<{
     query?: string;
     page?: string;
   }>;
 }) {
+  // searchParamsがPromiseとして渡されるため、props.searchParamsを取得するときは非同期処理が必要。
+  // awaitを使用して非同期処理の結果を待つ必要があります。
   const searchParams = await props.searchParams;
   const query = searchParams?.query || "";
   const currentPage = Number(searchParams?.page) || 1;
+
   return (
     <div className="w-full">
       <div className="flex w-full items-center justify-between">
