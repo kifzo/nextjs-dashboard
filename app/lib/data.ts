@@ -8,6 +8,7 @@ import {
   Revenue,
 } from './definitions';
 import { formatCurrency } from './utils'; // app.lib.utils.ts で定義された関数
+import { log } from 'console';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
@@ -125,6 +126,7 @@ export async function fetchCardData() {
 }
 
 const ITEMS_PER_PAGE = 6;
+
 export async function fetchFilteredInvoices(
   query: string,
   currentPage: number,
@@ -160,7 +162,7 @@ export async function fetchFilteredInvoices(
     throw new Error('Failed to fetch invoices.');
   }
 }
-
+// 請求書の総数を取得し、それを基にページ数を計算して返す関数
 export async function fetchInvoicesPages(query: string) {
   try {
     const data = await sql`SELECT COUNT(*)
@@ -173,7 +175,6 @@ export async function fetchInvoicesPages(query: string) {
       invoices.date::text ILIKE ${`%${query}%`} OR
       invoices.status ILIKE ${`%${query}%`}
   `;
-
     const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
     return totalPages;
   } catch (error) {
@@ -228,21 +229,21 @@ export async function fetchFilteredCustomers(query: string) {
   try {
     const data = await sql<CustomersTableType[]>`
 		SELECT
-		  customers.id,
-		  customers.name,
-		  customers.email,
-		  customers.image_url,
-		  COUNT(invoices.id) AS total_invoices,
-		  SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending,
-		  SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+      customers.id,
+      customers.name,
+      customers.email,
+      customers.image_url,
+      COUNT(invoices.id) AS total_invoices,
+      SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending,
+      SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
 		FROM customers
 		LEFT JOIN invoices ON customers.id = invoices.customer_id
 		WHERE
-		  customers.name ILIKE ${`%${query}%`} OR
+      customers.name ILIKE ${`%${query}%`} OR
         customers.email ILIKE ${`%${query}%`}
 		GROUP BY customers.id, customers.name, customers.email, customers.image_url
 		ORDER BY customers.name ASC
-	  `;
+  `;
 
     const customers = data.map((customer) => ({
       ...customer,
