@@ -30,64 +30,28 @@ export async function fetchRevenue() {
     throw new Error('Failed to fetch revenue data.');
   }
 }
-// SQLクエリは LIMIT 5 でタ最新の5件を取得しようとしていますが、重複データが返されている。
-// export async function fetchLatestInvoices() {
-//   try {
-//     const data = await sql<LatestInvoiceRaw[]>`
-//       SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
-//       FROM invoices
-//       JOIN customers ON invoices.customer_id = customers.id
-//       ORDER BY invoices.date DESC
-//       LIMIT 5`;
-//     console.log('Latest Invoices:', data);
 
-//     const latestInvoices = data.map((invoice) => ({
-//       ...invoice,
-//       amount: formatCurrency(invoice.amount),
-//     }));
-//     return latestInvoices;
-//   } catch (error) {
-//     console.error('Database Error:', error);
-//     throw new Error('Failed to fetch the latest invoices.');
-//   }
-// }
-
-// この修正では、「顧客ごとに最新の請求書」を取得し、その後で全体的に日付の降順で上位5件を取得します。これにより、同じ顧客の複数の請求書が重複して表示されることを防ぎます。この方法を使うことで、Michael Novotnyさんの請求書が1つだけ含まれ、他の顧客の最新の請求書も表示されるようになります。もし特定の顧客（Michael Novotny）の請求書が多すぎて他の顧客のデータが表示されないなら、この方法が最適です。
 export async function fetchLatestInvoices() {
   try {
     const data = await sql<LatestInvoiceRaw[]>`
-      WITH RankedInvoices AS (
-        SELECT
-          invoices.amount,
-          customers.name,
-          customers.image_url,
-          customers.email,
-          invoices.id,
-          invoices.date,
-          ROW_NUMBER() OVER (PARTITION BY customers.id ORDER BY invoices.date DESC) as rn
-        FROM invoices
-        JOIN customers ON invoices.customer_id = customers.id
-      )
-      SELECT amount, name, image_url, email, id, date
-      FROM RankedInvoices
-      WHERE rn = 1
-      ORDER BY date DESC
+      SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
+      FROM invoices
+      JOIN customers ON invoices.customer_id = customers.id
+      ORDER BY invoices.date DESC
       LIMIT 5`;
+    console.log('Latest Invoices:', data);
 
     const latestInvoices = data.map((invoice) => ({
       ...invoice,
       amount: formatCurrency(invoice.amount),
     }));
-
-    // デバッグ用に結果を確認
-    console.log('Latest Invoices (distinct customers):', data);
-
     return latestInvoices;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch the latest invoices.');
   }
 }
+
 //     // 並列クエリアプローチの使用ケース:
 //     // 各クエリの実行に非常に時間がかかる場合
 //     // クエリ同士が完全に独立していて、それぞれ大量のデータを処理する場合
@@ -196,51 +160,6 @@ export async function fetchFilteredInvoices(
     throw new Error('Failed to fetch invoices.');
   }
 }
-
-// 関数で同一人物の重複を避けるために、クエリを修正する必要があります。以下のように、サブクエリを使用して各顧客の最新の請求書のみを取得するように変更します。
-// RankedInvoices という一時的なテーブルを作成します。このテーブルでは、各顧客ごとに請求書に順位を付けます（最新の日付の請求書が1位になります）。
-// その後、順位が1位の請求書（つまり各顧客の最新の請求書）だけを選びます。
-// 最後に、結果を日付の降順で並べ替え、指定されたページの結果を返します。
-// export async function fetchFilteredInvoices(
-//   query: string,
-//   currentPage: number,
-// ) {
-//   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-
-//   try {
-//     const invoices = await sql<InvoicesTable[]>`
-//       WITH RankedInvoices AS (
-//         SELECT
-//           invoices.id,
-//           invoices.amount,
-//           invoices.date,
-//           invoices.status,
-//           customers.name,
-//           customers.email,
-//           customers.image_url,
-//           ROW_NUMBER() OVER (PARTITION BY customers.id ORDER BY invoices.date DESC) as rn
-//         FROM invoices
-//         JOIN customers ON invoices.customer_id = customers.id
-//         WHERE
-//           customers.name ILIKE ${`%${query}%`} OR
-//           customers.email ILIKE ${`%${query}%`} OR
-//           invoices.amount::text ILIKE ${`%${query}%`} OR
-//           invoices.date::text ILIKE ${`%${query}%`} OR
-//           invoices.status ILIKE ${`%${query}%`}
-//       )
-//       SELECT id, amount, date, status, name, email, image_url
-//       FROM RankedInvoices
-//       WHERE rn = 1
-//       ORDER BY date DESC
-//       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-//     `;
-
-//     return invoices;
-//   } catch (error) {
-//     console.error('Database Error:', error);
-//     throw new Error('Failed to fetch invoices.');
-//   }
-// }
 
 export async function fetchInvoicesPages(query: string) {
   try {
