@@ -3,6 +3,7 @@ import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
 import { fetchCustomers } from "@/app/lib/data";
 
 export default async function Page() {
+  //全顧客を取得する
   const customers = await fetchCustomers();
 
   return (
