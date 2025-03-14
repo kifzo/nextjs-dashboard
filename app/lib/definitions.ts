@@ -21,8 +21,7 @@ export type Invoice = {
   customer_id: string;
   amount: number;
   date: string;
-  // In TypeScript, this is called a string union type.
-  // It means that the "status" property can only be one of the two strings: 'pending' or 'paid'.
+  // status というプロパティ（データの項目）は、文字列のユニオン型で'pending'（保留中）か'paid'（支払い済み）のどちらかの文字列しか持つことができない.
   status: 'pending' | 'paid';
 };
 
