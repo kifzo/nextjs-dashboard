@@ -23,24 +23,24 @@ const UpdateInvoice = FormSchema.omit({ id: true, date: true });
 //
 
 export async function createInvoice(formData: FormData) {
-  // const rawFormData = {
-  // データが正しい形式でない場合、parseメソッドはエラーを投げます。
-    const { customerId, amount, status } = CreateInvoice.parse({
+  const { customerId, amount, status } = CreateInvoice.parse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
-    status: formData.get('status') || 'pending',
+    status: formData.get('status'),
   });
-  // Test it out:
-  // console.log("rawFormData", rawFormData);
-  // console.log("typeof ", typeof rawFormData.amount);
+
   const amountInCents = amount * 100;
-  // 現在の日付を ISO 形式の文字列として取得し、そのうちの日付部分（YYYY-MM-DD）だけを抽出
   const date = new Date().toISOString().split('T')[0];
 
-  await sql`
-    INSERT INTO invoices (customer_id, amount, status, date)
-    VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
-  `;
+  try {
+    await sql`
+      INSERT INTO invoices (customer_id, amount, status, date)
+      VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+    `;
+  } catch (error) {
+    console.error(error);
+  }
+
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
 }
@@ -54,17 +54,26 @@ export async function updateInvoice(id: string, formData: FormData) {
 
   const amountInCents = amount * 100;
 
-  await sql`
-    UPDATE invoices
-    SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-    WHERE id = ${id}
-  `;
+  try {
+    await sql`
+        UPDATE invoices
+        SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+        WHERE id = ${id}
+      `;
+  } catch (error) {
+    // We'll log the error to the console for now
+    console.error(error);
+  }
 
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
 }
 
 export async function deleteInvoice(id: string) {
+  // エラー発生時のテスト処理
+  throw new Error('Failed to Delete Invoice');
+ 
+  // 到達不可能なコードブロック
   await sql`DELETE FROM invoices WHERE id = ${id}`;
   revalidatePath('/dashboard/invoices');
 }
