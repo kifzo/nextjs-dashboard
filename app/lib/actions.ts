@@ -26,7 +26,6 @@ const FormSchema = z.object({
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 
 const UpdateInvoice = FormSchema.omit({ id: true, date: true });
-//
 
 export type State = {
   errors?: {
@@ -38,14 +37,14 @@ export type State = {
 };
 
 export async function createInvoice(prevState: State, formData: FormData) {
-  // Validate form using Zod
+  // Zodを使用してフォームを検証する
   const validatedFields = CreateInvoice.safeParse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
     status: formData.get('status'),
   });
 
-  // If form validation fails, return errors early. Otherwise, continue.
+  // フォームのバリデーションに失敗した場合はエラーを早期に返し、成功した場合は処理を続行します。
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
@@ -53,57 +52,72 @@ export async function createInvoice(prevState: State, formData: FormData) {
     };
   }
 
-  // Prepare data for insertion into the database
+  // データベースへの挿入用にデータを準備
   const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
   const date = new Date().toISOString().split('T')[0];
 
-  // Insert data into the database
+  // データベースにデータを挿入
   try {
     await sql`
       INSERT INTO invoices (customer_id, amount, status, date)
       VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
     `;
   } catch (error) {
-    // If a database error occurs, return a more specific error.
+    // データベースエラーが発生した場合、より具体的なエラーを返します。
     return {
       message: 'Database Error: Failed to Create Invoice.',
     };
   }
 
-  // Revalidate the cache for the invoices page and redirect the user.
+  // 請求書ページのキャッシュを再検証し、ユーザーをリダイレクトします。
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
 }
 
-export async function updateInvoice(id: string, formData: FormData) {
-  const { customerId, amount, status } = UpdateInvoice.parse({
+// 更新処理のための関数
+
+export async function updateInvoice(
+  id: string,
+  prevState: State,
+  formData: FormData,
+) {
+  const validatedFields = UpdateInvoice.safeParse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
     status: formData.get('status'),
   });
 
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Update Invoice.',
+    };
+  }
+
+  const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
 
   try {
     await sql`
-        UPDATE invoices
-        SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-        WHERE id = ${id}
-      `;
+      UPDATE invoices
+      SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+      WHERE id = ${id}
+    `;
   } catch (error) {
-    // We'll log the error to the console for now
-    console.error(error);
+    return { message: 'Database Error: Failed to Update Invoice.' };
   }
 
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
 }
 
+// 請求書の削除処理
+
 export async function deleteInvoice(id: string) {
   // エラー発生時のテスト処理
   // throw new Error('Failed to Delete Invoice');
- 
+
   // 到達不可能なコードブロック
   await sql`DELETE FROM invoices WHERE id = ${id}`;
   revalidatePath('/dashboard/invoices');
