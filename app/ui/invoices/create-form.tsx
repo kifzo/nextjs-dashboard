@@ -10,11 +10,20 @@ import {
 } from "@heroicons/react/24/outline";
 import { Button } from "@/app/ui/button";
 import { createInvoice, State } from "@/app/lib/actions";
-// useActionState はフックなので、"use client"でクライアント コンポーネントに変換する必要あり
-import { useActionState } from "react";
+import { useActionState } from "react"; // 要 "use client"
 
+// propsを複数受け取る場合は、型注釈より型エイリアスを付けた方が分かりやすい
+// type Props = {
+//   customers: CustomerField[];
+//   invoices: InvioiceField[];
+// };
+// export default function Form({ customers }: Props) {...
+
+// ひとつのpropsを受け取り型注釈を直接つける {propsName}: { propsName: type }
 export default function Form({ customers }: { customers: CustomerField[] }) {
+  // importされた State型のinitialStateに、message:nullとerrors:{}のオブジェクトを代入。
   const initialState: State = { message: null, errors: {} };
+  // stateにはinitialState(messageとerrorの状態)が含まれます。
   const [state, formAction] = useActionState(createInvoice, initialState);
   return (
     <form action={formAction}>
