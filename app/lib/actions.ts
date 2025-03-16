@@ -53,6 +53,7 @@ export async function createInvoice(prevState: State, formData: FormData) {
   }
 
   // データベースへの挿入用にデータを準備
+  // validatedFields.dataからcustomerId, amount, statusのプロパティを取り出し、各同名の変数に分割代入
   const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
   const date = new Date().toISOString().split('T')[0];
